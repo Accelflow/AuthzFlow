@@ -12,7 +12,7 @@ for(const target of ['aarch64-apple-ios','aarch64-apple-ios-sim','aarch64-linux-
  const env=target.endsWith('android')?{CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER:join(ndk,'toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android24-clang'),RUSTFLAGS:'-C link-arg=-Wl,-z,max-page-size=16384'}:{};
  run('cargo',['build','--locked','-p','authzflow-native','--release','--target',target],env);
 }
-for(const name of ['LICENSE','THIRD_PARTY_NOTICES.md','RUST_STD_NOTICES.html'])await copyFile(join('packages/core',name),join(staging,name));
+for(const name of ['LICENSE','THIRD_PARTY_NOTICES.md'])await copyFile(join('packages/core',name),join(staging,name));
 await copyFile('crates/authzflow-native/include/authzflow_native.h',join(staging,'include/authzflow_native.h'));
 run('xcodebuild',['-create-xcframework','-library',resolve('target/aarch64-apple-ios/release/libauthzflow_native.a'),'-headers',join(staging,'include'),'-library',resolve('target/aarch64-apple-ios-sim/release/libauthzflow_native.a'),'-headers',join(staging,'include'),'-output',join(staging,'AuthzFlow.xcframework')]);
 await mkdir(join(staging,'android/arm64-v8a'),{recursive:true});await copyFile('target/aarch64-linux-android/release/libauthzflow_native.so',join(staging,'android/arm64-v8a/libauthzflow_native.so'));

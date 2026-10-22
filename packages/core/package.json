@@ -44,7 +44,6 @@
     "LICENSE",
     "README.md",
     "THIRD_PARTY_NOTICES.md",
-    "RUST_STD_NOTICES.html",
     "testing"
   ],
   "repository": {
