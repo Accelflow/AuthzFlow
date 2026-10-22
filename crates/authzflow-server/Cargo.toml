@@ -1,0 +1,13 @@
+[package]
+name = "authzflow-server"
+version.workspace = true
+edition.workspace = true
+publish = false
+license.workspace = true
+description = "Framework-neutral authorization complete-check provider"
+authors = ["Accelflow Inc."]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+uuid = { version = "=1.23.2", features = ["v4"] }

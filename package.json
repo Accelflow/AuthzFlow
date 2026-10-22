@@ -1,0 +1,20 @@
+{
+  "name": "authzflow-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "build:sdk": "tsc -p packages/core/tsconfig.json",
+    "test:sdk": "node scripts/test-sdk.mjs",
+    "build:server": "tsc -p packages/server/tsconfig.json",
+    "test:server": "pnpm build:server && node --test packages/server/test/*.test.mjs",
+    "example": "node examples/check-only/main.mjs",
+    "test:release": "node public-tools/check-licenses.mjs && node --test public-tools/*.test.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@playwright/test": "1.64.1"
+  },
+  "license": "MIT"
+}

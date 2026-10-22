@@ -1,0 +1,33 @@
+{
+  "name": "@authzflow/server",
+  "version": "0.1.0-alpha.8",
+  "private": false,
+  "type": "module",
+  "author": "Accelflow Inc.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Accelflow/AuthzFlow.git"
+  },
+  "license": "MIT",
+  "description": "Framework-neutral authorization complete-check provider",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  }
+}

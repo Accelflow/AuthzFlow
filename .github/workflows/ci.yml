@@ -1,0 +1,95 @@
+name: Public alpha verification
+on:
+  push:
+  pull_request:
+  workflow_call:
+    outputs:
+      artifact_id:
+        value: ${{ jobs.build.outputs.artifact_id }}
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.repository == 'Accelflow/AuthzFlow'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    outputs:
+      artifact_id: ${{ steps.archives.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+      - name: Check source boundary
+        run: node public-tools/check-tree.mjs
+      - name: Install pinned build tools
+        run: |
+          rustup toolchain install 1.97.1 --profile minimal --target wasm32-unknown-unknown
+          rustup default 1.97.1
+          rustup component add clippy --toolchain 1.97.1
+          cargo install wasm-bindgen-cli --version 0.2.129 --locked
+          npm install --global pnpm@10.18.3
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build and verify
+        run: |
+          cargo test --locked --workspace
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          pnpm build:wasm
+          pnpm test:sdk
+          pnpm test:server
+          pnpm example
+          pnpm test:release
+      - name: Browser Wasm parity
+        env:
+          AUTHZFLOW_BUNDLED_BROWSER: '1'
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/browser-parity.mjs
+      - name: Pack and verify exact archives
+        run: |
+          mkdir "$RUNNER_TEMP/npm"
+          npm pack ./packages/core --ignore-scripts --pack-destination "$RUNNER_TEMP/npm"
+          npm pack ./packages/server --ignore-scripts --pack-destination "$RUNNER_TEMP/npm"
+          node public-tools/verify-release.mjs "$RUNNER_TEMP/npm"
+          node public-tools/consumer-smoke.mjs "$RUNNER_TEMP/npm"
+      - name: Scan source and archives with pinned gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz --output "$RUNNER_TEMP/gitleaks.tar.gz"
+          printf '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  %s\n' "$RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          printf '[extend]\nuseDefault = true\n' > "$RUNNER_TEMP/scan.toml"
+          mkdir "$RUNNER_TEMP/empty-ignore" "$RUNNER_TEMP/unpacked"
+          "$RUNNER_TEMP/gitleaks" dir . --config "$RUNNER_TEMP/scan.toml" --gitleaks-ignore-path "$RUNNER_TEMP/empty-ignore" --ignore-gitleaks-allow --redact=100 --no-banner
+          for file in "$RUNNER_TEMP/npm/"*.tgz; do
+            mkdir "$RUNNER_TEMP/unpacked/$(basename "$file" .tgz)"
+            tar -xzf "$file" -C "$RUNNER_TEMP/unpacked/$(basename "$file" .tgz)"
+          done
+          "$RUNNER_TEMP/gitleaks" dir "$RUNNER_TEMP/unpacked" --config "$RUNNER_TEMP/scan.toml" --gitleaks-ignore-path "$RUNNER_TEMP/empty-ignore" --ignore-gitleaks-allow --redact=100 --no-banner
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        id: archives
+        with:
+          name: alpha-npm-candidates
+          path: ${{ runner.temp }}/npm/*.tgz
+          if-no-files-found: error
+          retention-days: 7
+  node22:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.15.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact_id }}
+          path: ${{ runner.temp }}/npm
+          merge-multiple: true
+      - run: node public-tools/consumer-smoke.mjs "$RUNNER_TEMP/npm"

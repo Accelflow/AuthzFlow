@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {canPurgeReplica} from './replica-eligibility.ts';
+const clean={pendingWrites:false,inFlight:false,conflicts:false,holds:false,unresolvedSources:false,contentChanged:false};
+test('C1 clean replica may be purged',()=>assert.equal(canPurgeReplica(clean),true));
+test('C2 unsent changes block purge',()=>assert.equal(canPurgeReplica({...clean,pendingWrites:true}),false));
+test('C3 immutable sending batch blocks purge',()=>assert.equal(canPurgeReplica({...clean,inFlight:true}),false));
+test('C4 unresolved conflict blocks purge',()=>assert.equal(canPurgeReplica({...clean,conflicts:true}),false));
+test('C5 active hold blocks purge',()=>assert.equal(canPurgeReplica({...clean,holds:true}),false));
+test('C6 original unresolved source blocks purge',()=>assert.equal(canPurgeReplica({...clean,unresolvedSources:true}),false));
+test('C7 metadata or content difference blocks purge',()=>assert.equal(canPurgeReplica({...clean,contentChanged:true}),false));
+test('C8 combined blockers remain blocked',()=>assert.equal(canPurgeReplica({pendingWrites:true,inFlight:true,conflicts:true,holds:true,unresolvedSources:true,contentChanged:true}),false));
+test('C9 frozen input is not mutated',()=>{const frozen=Object.freeze({...clean});assert.equal(canPurgeReplica(frozen),true);assert.deepEqual(frozen,clean);});

@@ -1,0 +1,320 @@
+[
+  {
+    "name": "online default",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "status": 200,
+      "body": {
+        "scopeId": "scope",
+        "resourceId": "resource",
+        "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "schemaVersion": 1,
+        "mode": "check_only",
+        "requestId": "request-1",
+        "binding": "account/user",
+        "leaseMs": 5000,
+        "readPolicy": {
+          "mode": "online_only",
+          "maxOfflineMs": 0
+        }
+      }
+    }
+  },
+  {
+    "name": "offline 30 minutes",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "policy": {
+      "mode": "offline_ttl",
+      "ttlMinutes": 30
+    },
+    "expected": {
+      "status": 200,
+      "body": {
+        "scopeId": "scope",
+        "resourceId": "resource",
+        "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "schemaVersion": 1,
+        "mode": "check_only",
+        "requestId": "request-1",
+        "binding": "account/user",
+        "leaseMs": 5000,
+        "readPolicy": {
+          "mode": "offline_ttl",
+          "maxOfflineMs": 1800000
+        }
+      }
+    }
+  },
+  {
+    "name": "one day maximum",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "policy": {
+      "mode": "offline_ttl",
+      "ttlMinutes": 1440
+    },
+    "expected": {
+      "status": 200,
+      "body": {
+        "scopeId": "scope",
+        "resourceId": "resource",
+        "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "schemaVersion": 1,
+        "mode": "check_only",
+        "requestId": "request-1",
+        "binding": "account/user",
+        "leaseMs": 5000,
+        "readPolicy": {
+          "mode": "offline_ttl",
+          "maxOfflineMs": 86400000
+        }
+      }
+    }
+  },
+  {
+    "name": "missing nonce",
+    "query": {},
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "invalid_authz_check"
+        }
+      }
+    }
+  },
+  {
+    "name": "extra identity query",
+    "query": {
+      "requestId": "request-1",
+      "binding": "forged"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "invalid_authz_check"
+        }
+      }
+    }
+  },
+  {
+    "name": "bad nonce",
+    "query": {
+      "requestId": "bad space"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "invalid_authz_check"
+        }
+      }
+    }
+  },
+  {
+    "name": "newline nonce",
+    "query": {
+      "requestId": "bad\n"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "invalid_authz_check"
+        }
+      }
+    }
+  },
+  {
+    "name": "long nonce",
+    "query": {
+      "requestId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "invalid_authz_check"
+        }
+      }
+    }
+  },
+  {
+    "name": "unauthenticated",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "authenticated": false,
+    "expected": {
+      "status": 401,
+      "body": {
+        "error": {
+          "code": "user_session_required"
+        }
+      }
+    }
+  },
+  {
+    "name": "revoked",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "decision": "forbidden",
+    "expected": {
+      "status": 403,
+      "body": {
+        "error": {
+          "code": "access_required"
+        }
+      }
+    }
+  },
+  {
+    "name": "missing resource",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "decision": "not_found",
+    "expected": {
+      "status": 404,
+      "body": {
+        "error": {
+          "code": "resource_not_found"
+        }
+      }
+    }
+  },
+  {
+    "name": "host error",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "hostError": true,
+    "expected": {
+      "status": 503,
+      "body": {
+        "error": {
+          "code": "authz_check_unavailable"
+        }
+      }
+    }
+  },
+  {
+    "name": "empty binding",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "status": 503,
+      "body": {
+        "error": {
+          "code": "authz_check_unavailable"
+        }
+      }
+    }
+  },
+  {
+    "name": "bad hash",
+    "query": {
+      "requestId": "request-1"
+    },
+    "binding": "account/user",
+    "metadata": {
+      "scopeId": "scope",
+      "resourceId": "resource",
+      "contentHash": "invalid"
+    },
+    "expected": {
+      "status": 503,
+      "body": {
+        "error": {
+          "code": "authz_check_unavailable"
+        }
+      }
+    }
+  }
+]

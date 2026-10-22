@@ -1,0 +1,11 @@
+/target/
+/node_modules/
+**/node_modules/
+/packages/core/dist/
+/packages/server/dist/
+/packages/core/wasm/
+/test-results/
+.env
+.env.*
+.DS_Store
+.codesynapse/

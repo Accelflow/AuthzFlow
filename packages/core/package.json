@@ -1,0 +1,64 @@
+{
+  "name": "@authzflow/core",
+  "version": "0.1.0-alpha.8",
+  "private": false,
+  "type": "module",
+  "author": "Accelflow Inc.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cache": {
+      "types": "./dist/cache.d.ts",
+      "import": "./dist/cache.js"
+    },
+    "./sqlite": {
+      "types": "./dist/sqlite.d.ts",
+      "import": "./dist/sqlite.js"
+    },
+    "./indexeddb": {
+      "types": "./dist/indexeddb.d.ts",
+      "import": "./dist/indexeddb.js"
+    },
+    "./replicas": {
+      "types": "./dist/replicas.d.ts",
+      "import": "./dist/replicas.js"
+    },
+    "./content-hash": {
+      "types": "./dist/content-hash.d.ts",
+      "import": "./dist/content-hash.js"
+    },
+    "./testing": {
+      "types": "./testing/index.d.mts",
+      "import": "./testing/index.mjs"
+    },
+    "./native-reader": {
+      "types": "./dist/native-reader.d.ts",
+      "import": "./dist/native-reader.js"
+    }
+  },
+  "files": [
+    "dist",
+    "wasm",
+    "LICENSE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "RUST_STD_NOTICES.html",
+    "testing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Accelflow/AuthzFlow.git"
+  },
+  "license": "MIT",
+  "description": "Authorization state runtime with Rust/Wasm and a checked reader",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  }
+}

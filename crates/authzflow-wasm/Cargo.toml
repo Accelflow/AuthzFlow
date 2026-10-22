@@ -1,0 +1,13 @@
+[package]
+name = "authzflow-wasm"
+version.workspace = true
+edition.workspace = true
+publish = false
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+authzflow-core = { path = "../authzflow-core" }
+wasm-bindgen = "=0.2.129"
