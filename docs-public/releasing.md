@@ -8,7 +8,7 @@ Supported validation targets are Node 22/24, TypeScript 5.9+, the pinned Rust to
 
 The public source checkout must pass Rust tests/Clippy, SDK/server tests, shared wire fixtures, the deterministic example, browser Wasm parity and exact archive tests. Build both archives, verify license/notices and absence of extra dependencies, scan the source and exact archives with pinned gitleaks, and install those archives in a clean consumer on Node 22 and 24.
 
-The root LICENSE applies to AuthzFlow original source. npm archives include LICENSE, README and THIRD_PARTY_NOTICES.md. Core additionally includes the Rust standard-library notices. Notice contents and the lockfile must be reviewed together whenever dependencies/toolchains change. Native crates remain source dependencies with explicit Git revisions for this alpha.
+The root LICENSE applies to AuthzFlow original source. npm archives include LICENSE, README and THIRD_PARTY_NOTICES.md. The consolidated THIRD_PARTY_NOTICES.md also contains the Rust standard-library notices in text form. Notice contents and the lockfile must be reviewed together whenever dependencies/toolchains change. Native crates remain source dependencies with explicit Git revisions for this alpha.
 
 ## Public source updates
 

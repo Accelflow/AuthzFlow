@@ -12,7 +12,7 @@ See https://github.com/Accelflow/AuthzFlow/blob/main/docs-public/getting-started
 
 Offline permissions expire at their original bounded deadline and are lost across reader/process restarts. Server-side revocation cannot instantly reach disconnected clients. Already returned plaintext, raw store bypasses, multi-owner coordination and stream recovery are outside alpha guarantees.
 
-LICENSE, THIRD_PARTY_NOTICES.md and RUST_STD_NOTICES.html are included. Security reporting: https://github.com/Accelflow/AuthzFlow/security/advisories/new .
+LICENSE and THIRD_PARTY_NOTICES.md are included; the latter contains dependency and Rust standard-library attributions and license texts. Security reporting: https://github.com/Accelflow/AuthzFlow/security/advisories/new .
 
 Additional entrypoints: `@authzflow/core/replicas` provides editor-independent purge eligibility and completion types; `@authzflow/core/content-hash` connects explicit client/server projections to SHA-256; `@authzflow/core/testing` is an optional Node external-journal conformance suite. Hosts retain transaction, dirty-state, identity and encryption ownership. A blocked purge preserves denial and unsent changes and is not physical deletion completion.
 

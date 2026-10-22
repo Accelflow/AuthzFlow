@@ -1,6 +1,6 @@
 {
   "rustVersion": "1.97.1",
-  "noticesSha256": "e602fe5c20dca53adc28cd0d5d0c5664676b1cdfcea480add77b9934dfbd30fe",
+  "noticesSha256": "cedacfd3904913beaaa05741d25bf6d627c5b51c6de644fc865d140b5de25f11",
   "packages": [
     {
       "name": "bumpalo",
