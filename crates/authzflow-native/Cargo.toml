@@ -1,0 +1,13 @@
+[package]
+name = "authzflow-native"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+authzflow-core = { path = "../authzflow-core" }
+serde_json.workspace = true

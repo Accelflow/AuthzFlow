@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "binding": "actor",
+  "epoch": "epoch",
+  "sequence": "1",
+  "revision": "1",
+  "cursor": "cursor-1",
+  "phase": "ready",
+  "resources": {
+    "article": {"access":"allow","version":"1","expires_at_ms":100,"offline":true,"boot":"boot","scopes":["scope"],"stale":false}
+  },
+  "scopes": {
+    "scope": {"access":"allow","version":"1","expires_at_ms":100,"offline":true,"boot":"boot","scopes":[],"stale":false}
+  }
+}

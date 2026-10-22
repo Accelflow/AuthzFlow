@@ -1,0 +1,14 @@
+[workspace]
+members = ["crates/authzflow-core", "crates/authzflow-wasm", "crates/authzflow-server", "crates/authzflow-native"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0-alpha.1"
+edition = "2024"
+license = "MIT"
+authors = ["Accelflow Inc."]
+repository = "https://github.com/Accelflow/AuthzFlow"
+
+[workspace.dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0"

@@ -1,0 +1,1437 @@
+[
+  {
+    "name": "valid",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "boot",
+        "now_ms": 50
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": true,
+      "reason": "allowed"
+    }
+  },
+  {
+    "name": "exact-lease-expiry",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "boot",
+        "now_ms": 100
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": false,
+      "reason": "resource_invalid"
+    }
+  },
+  {
+    "name": "resource-revoked",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "deny",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "boot",
+        "now_ms": 50
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": false,
+      "reason": "resource_invalid"
+    }
+  },
+  {
+    "name": "scope-revoked",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "deny",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "boot",
+        "now_ms": 50
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": false,
+      "reason": "scope_invalid"
+    }
+  },
+  {
+    "name": "scope-unknown",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {}
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "boot",
+        "now_ms": 50
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": false,
+      "reason": "scope_not_found"
+    }
+  },
+  {
+    "name": "pending-commit",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "commit_pending",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "boot",
+        "now_ms": 50
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": false,
+      "reason": "not_ready"
+    }
+  },
+  {
+    "name": "closed",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "closed",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "boot",
+        "now_ms": 50
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": false,
+      "reason": "not_ready"
+    }
+  },
+  {
+    "name": "restart-boot",
+    "request": {
+      "op": "evaluate",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "resource": "article",
+      "clock": {
+        "boot": "new-boot",
+        "now_ms": 50
+      },
+      "offline": false
+    },
+    "expected": {
+      "allowed": false,
+      "reason": "resource_invalid"
+    }
+  },
+  {
+    "name": "prepare-revoke",
+    "request": {
+      "op": "prepare",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "incoming": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "2",
+        "revision": "1",
+        "cursor": "cursor-2",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "deny",
+            "version": "2",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    },
+    "expected": {
+      "expected_revision": "1",
+      "pending": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "commit_pending",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "next": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "2",
+        "revision": "2",
+        "cursor": "cursor-2",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "deny",
+            "version": "2",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "commit-revoke",
+    "request": {
+      "op": "commit",
+      "plan": {
+        "expected_revision": "1",
+        "pending": {
+          "schema_version": 1,
+          "binding": "actor",
+          "epoch": "epoch",
+          "sequence": "1",
+          "revision": "1",
+          "cursor": "cursor-1",
+          "phase": "commit_pending",
+          "resources": {
+            "article": {
+              "access": "allow",
+              "version": "1",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [
+                "scope"
+              ],
+              "stale": false
+            }
+          },
+          "scopes": {
+            "scope": {
+              "access": "allow",
+              "version": "1",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [],
+              "stale": false
+            }
+          }
+        },
+        "next": {
+          "schema_version": 1,
+          "binding": "actor",
+          "epoch": "epoch",
+          "sequence": "2",
+          "revision": "2",
+          "cursor": "cursor-2",
+          "phase": "ready",
+          "resources": {
+            "article": {
+              "access": "allow",
+              "version": "1",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [
+                "scope"
+              ],
+              "stale": false
+            }
+          },
+          "scopes": {
+            "scope": {
+              "access": "deny",
+              "version": "2",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [],
+              "stale": false
+            }
+          }
+        }
+      },
+      "saved_revision": "2"
+    },
+    "expected": {
+      "schema_version": 1,
+      "binding": "actor",
+      "epoch": "epoch",
+      "sequence": "2",
+      "revision": "2",
+      "cursor": "cursor-2",
+      "phase": "ready",
+      "resources": {
+        "article": {
+          "access": "allow",
+          "version": "1",
+          "expires_at_ms": 100,
+          "offline": true,
+          "boot": "boot",
+          "scopes": [
+            "scope"
+          ],
+          "stale": false
+        }
+      },
+      "scopes": {
+        "scope": {
+          "access": "deny",
+          "version": "2",
+          "expires_at_ms": 100,
+          "offline": true,
+          "boot": "boot",
+          "scopes": [],
+          "stale": false
+        }
+      }
+    }
+  },
+  {
+    "name": "wrong-commit",
+    "request": {
+      "op": "commit",
+      "plan": {
+        "expected_revision": "1",
+        "pending": {
+          "schema_version": 1,
+          "binding": "actor",
+          "epoch": "epoch",
+          "sequence": "1",
+          "revision": "1",
+          "cursor": "cursor-1",
+          "phase": "commit_pending",
+          "resources": {
+            "article": {
+              "access": "allow",
+              "version": "1",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [
+                "scope"
+              ],
+              "stale": false
+            }
+          },
+          "scopes": {
+            "scope": {
+              "access": "allow",
+              "version": "1",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [],
+              "stale": false
+            }
+          }
+        },
+        "next": {
+          "schema_version": 1,
+          "binding": "actor",
+          "epoch": "epoch",
+          "sequence": "2",
+          "revision": "2",
+          "cursor": "cursor-2",
+          "phase": "ready",
+          "resources": {
+            "article": {
+              "access": "allow",
+              "version": "1",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [
+                "scope"
+              ],
+              "stale": false
+            }
+          },
+          "scopes": {
+            "scope": {
+              "access": "deny",
+              "version": "2",
+              "expires_at_ms": 100,
+              "offline": true,
+              "boot": "boot",
+              "scopes": [],
+              "stale": false
+            }
+          }
+        }
+      },
+      "saved_revision": "3"
+    },
+    "error": "commit_mismatch"
+  },
+  {
+    "name": "stale-snapshot",
+    "request": {
+      "op": "prepare",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "2",
+        "revision": "2",
+        "cursor": "cursor-2",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "deny",
+            "version": "2",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "incoming": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    },
+    "error": "stale_snapshot"
+  },
+  {
+    "name": "noncanonical-version",
+    "request": {
+      "op": "prepare",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "incoming": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "01",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    },
+    "error": "noncanonical_version"
+  },
+  {
+    "name": "u64-above-js-safe-integer",
+    "request": {
+      "op": "prepare",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "9007199254740993",
+        "revision": "9007199254740993",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "incoming": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "9007199254740993",
+        "revision": "9007199254740993",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    },
+    "expected": {
+      "expected_revision": "9007199254740993",
+      "pending": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "9007199254740993",
+        "revision": "9007199254740993",
+        "cursor": "cursor-1",
+        "phase": "commit_pending",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "next": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "9007199254740993",
+        "revision": "9007199254740994",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "9007199254740993",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "unknown-operation",
+    "request": {
+      "op": "grant_everything"
+    },
+    "error": "invalid_request"
+  },
+  {
+    "name": "batch-revoke",
+    "request": {
+      "op": "changes",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "batch": {
+        "binding": "actor",
+        "epoch": "epoch",
+        "from_sequence": "1",
+        "through_sequence": "2",
+        "next_cursor": "cursor-2",
+        "changes": [
+          {
+            "sequence": "2",
+            "target": {
+              "kind": "scope",
+              "id": "scope"
+            },
+            "action": "revoke"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "expected_revision": "1",
+      "pending": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "commit_pending",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "next": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "2",
+        "revision": "2",
+        "cursor": "cursor-2",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "deny",
+            "version": "2",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "batch-grant",
+    "request": {
+      "op": "changes",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "batch": {
+        "binding": "actor",
+        "epoch": "epoch",
+        "from_sequence": "1",
+        "through_sequence": "2",
+        "next_cursor": "cursor-2",
+        "changes": [
+          {
+            "sequence": "2",
+            "target": {
+              "kind": "scope",
+              "id": "scope"
+            },
+            "action": "grant"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "expected_revision": "1",
+      "pending": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "commit_pending",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "next": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "2",
+        "revision": "2",
+        "cursor": "cursor-2",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "revalidate",
+            "version": "2",
+            "expires_at_ms": 0,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "batch-invalidate",
+    "request": {
+      "op": "changes",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "batch": {
+        "binding": "actor",
+        "epoch": "epoch",
+        "from_sequence": "1",
+        "through_sequence": "2",
+        "next_cursor": "cursor-2",
+        "changes": [
+          {
+            "sequence": "2",
+            "target": {
+              "kind": "scope",
+              "id": "scope"
+            },
+            "action": "invalidate"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "expected_revision": "1",
+      "pending": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "commit_pending",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "next": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "2",
+        "revision": "2",
+        "cursor": "cursor-2",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": true
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "batch-cursor-gap",
+    "request": {
+      "op": "changes",
+      "state": {
+        "schema_version": 1,
+        "binding": "actor",
+        "epoch": "epoch",
+        "sequence": "1",
+        "revision": "1",
+        "cursor": "cursor-1",
+        "phase": "ready",
+        "resources": {
+          "article": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [
+              "scope"
+            ],
+            "stale": false
+          }
+        },
+        "scopes": {
+          "scope": {
+            "access": "allow",
+            "version": "1",
+            "expires_at_ms": 100,
+            "offline": true,
+            "boot": "boot",
+            "scopes": [],
+            "stale": false
+          }
+        }
+      },
+      "batch": {
+        "binding": "actor",
+        "epoch": "epoch",
+        "from_sequence": "0",
+        "through_sequence": "2",
+        "next_cursor": "cursor-2",
+        "changes": [
+          {
+            "sequence": "2",
+            "target": {
+              "kind": "scope",
+              "id": "scope"
+            },
+            "action": "invalidate"
+          }
+        ]
+      }
+    },
+    "error": "cursor_reset_required"
+  }
+]

@@ -1,0 +1,44 @@
+name: Protected public alpha release
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish both verified alpha archives to npm
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'Accelflow/AuthzFlow' && startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/ci.yml
+  publish:
+    if: inputs.publish
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ needs.verify.outputs.artifact_id }}
+          path: ${{ runner.temp }}/npm
+          merge-multiple: true
+      - name: Verify tag and archives before OIDC publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e 'import fs from "node:fs";const a=JSON.parse(fs.readFileSync("packages/core/package.json")),b=JSON.parse(fs.readFileSync("packages/server/package.json"));if(a.version!==b.version||process.env.GITHUB_REF!=="refs/tags/v"+a.version)throw Error("release_tag_mismatch");'
+          node public-tools/verify-release.mjs "$RUNNER_TEMP/npm"
+          node public-tools/consumer-smoke.mjs "$RUNNER_TEMP/npm"
+          node -e 'const v=require("node:child_process").execFileSync("npm",["--version"],{encoding:"utf8"}).trim().split(".").map(Number);if(v.length!==3||!v.every(Number.isInteger)||v[0]<11||(v[0]===11&&(v[1]<5||(v[1]===5&&v[2]<1))))throw Error("npm_oidc_version_invalid");'
+          for file in "$RUNNER_TEMP/npm/"*.tgz; do npm publish "$file" --tag alpha --access public --provenance --ignore-scripts; done
