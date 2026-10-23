@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "authzflow-core"
-version = "0.1.0-alpha.1"
+version = "0.1.0-beta.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -12,7 +12,7 @@ dependencies = [
 
 [[package]]
 name = "authzflow-native"
-version = "0.1.0-alpha.1"
+version = "0.1.0-beta.1"
 dependencies = [
  "authzflow-core",
  "serde_json",
@@ -20,7 +20,7 @@ dependencies = [
 
 [[package]]
 name = "authzflow-server"
-version = "0.1.0-alpha.1"
+version = "0.1.0-beta.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -29,7 +29,7 @@ dependencies = [
 
 [[package]]
 name = "authzflow-wasm"
-version = "0.1.0-alpha.1"
+version = "0.1.0-beta.1"
 dependencies = [
  "authzflow-core",
  "wasm-bindgen",

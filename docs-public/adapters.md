@@ -12,7 +12,7 @@ The package deliberately uses callbacks instead of depending on a web framework,
 
 The route calls `provider.check({ query, context, target })` and applies `status`, every returned header, and `body`. Authorization must also remain on all ordinary content APIs. Host errors become sanitized 503 responses. Neither server module writes logs by itself.
 
-Native Rust APIs implement `AuthorizationAdapter` and await `CheckProvider::check`. Futures are Send and the library selects no async runtime. Return `Ok(None)` for missing identity and `Err(AdapterError)` for backend failures; do not use panics for ordinary errors. Use a fixed reviewed Git revision when depending on the alpha source.
+Native Rust APIs implement `AuthorizationAdapter` and await `CheckProvider::check`. Futures are Send and the library selects no async runtime. Return `Ok(None)` for missing identity and `Err(AdapterError)` for backend failures; do not use panics for ordinary errors. Use a fixed reviewed Git revision when depending on the beta source.
 
 ## Checked reader
 
@@ -25,7 +25,7 @@ Native Rust APIs implement `AuthorizationAdapter` and await `CheckProvider::chec
 - `check({ requestId })`: call a fixed trusted endpoint with the current session and return a Response-compatible status and JSON reader. Preserve HTTP errors; reject transport errors as TypeError or TimeoutError. For web callers use the product's authenticated same-origin transport.
 - `read()` and `contentHash(value)`: read structured-cloneable target content and hash that exact value using the same canonicalization as the server. The reader clones the returned value before hashing so shared host-cache mutations cannot change the checked snapshot. Functions and other non-cloneable values fail closed. Do not supply a stale stored hash for newly changed content.
 
-Node callers supply `wasmBytes` loaded from the installed package; browsers may fetch the Wasm asset from their bundler output. [Getting started](getting-started.md) describes asset loading. Readers serialize their own operations; separate owners need a host coordination protocol and are outside alpha guarantees.
+Node callers supply `wasmBytes` loaded from the installed package; browsers may fetch the Wasm asset from their bundler output. [Getting started](getting-started.md) describes asset loading. Readers serialize their own operations; separate owners need a host coordination protocol and are outside beta guarantees.
 
 The host must pass every protected read through the runtime and remove already rendered content when its displayed permit expires or identity changes. Search, export, AI tools, background tasks and other raw store reads are separate integration surfaces. UI hiding alone is not access control.
 

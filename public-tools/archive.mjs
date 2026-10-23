@@ -33,7 +33,7 @@ export async function verifyReleaseArchive(archive) {
   const source = JSON.parse(await readFile(new URL(`../packages/${manifest.name.endsWith('/core') ? 'core' : 'server'}/package.json`, import.meta.url), 'utf8'));
   if (JSON.stringify(manifest) !== JSON.stringify(source) || manifest.private !== false || manifest.license !== 'MIT'
     || manifest.author !== 'Accelflow Inc.' || manifest.publishConfig?.access !== 'public' || manifest.publishConfig?.provenance !== true
-    || manifest.publishConfig?.registry !== 'https://registry.npmjs.org/' || !/^\d+\.\d+\.\d+-alpha\.\d+$/.test(manifest.version)
+    || manifest.publishConfig?.registry !== 'https://registry.npmjs.org/' || !/^\d+\.\d+\.\d+-(?:alpha|beta)\.\d+$/.test(manifest.version)
     || manifest.scripts && Object.keys(manifest.scripts).length) throw Error('npm_publication_not_ready');
   for (const group of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies']) if (manifest[group] && Object.keys(manifest[group]).length) throw Error('npm_dependency_unreviewed');
   for (const file of ['LICENSE', 'THIRD_PARTY_NOTICES.md']) {

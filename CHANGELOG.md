@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.1.0-alpha.8 (unpublished)
+## 0.1.0-beta.1
+
+- Promote the reviewed alpha.8 implementation to beta without changing runtime behavior.
+- Align npm and Rust workspace versions and publish paired packages under the beta dist-tag.
+- Preserve the tested integration scope and existing security limitations.
+- Include consolidated Markdown third-party notices in both npm packages; no HTML notices.
+
+## 0.1.0-alpha.8
 
 - Add immutable, bounded resource state snapshots and subscriptions with expiry and failure reasons.
 - Add strict `revalidate()` for change catch-up plus a fresh online permit; existing read APIs remain compatible.
@@ -9,7 +16,7 @@
 - Expand the shared Wasm/native contract for ACK/disconnect, delayed responses, expiry, session switches, observers and durable revoke races.
 - Keep pending checks active through asynchronous denial cleanup, preventing strict retries from starving host storage on an already-rejected inner promise.
 - Add a native-only coordinator entry with no Wasm loader/import.meta dependency for Hermes.
-- Align the server candidate version; no server behavior change, npm publication or public synchronization.
+- Align the server version; no server behavior change. Published as paired npm packages with provenance.
 
 ## 0.1.0-alpha.7 (unpublished)
 
