@@ -1,4 +1,4 @@
-name: Public alpha verification
+name: Public prerelease verification
 on:
   push:
   pull_request:
@@ -72,7 +72,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         id: archives
         with:
-          name: alpha-npm-candidates
+          name: prerelease-npm-candidates
           path: ${{ runner.temp }}/npm/*.tgz
           if-no-files-found: error
           retention-days: 7

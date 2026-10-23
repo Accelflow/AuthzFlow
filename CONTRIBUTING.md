@@ -6,4 +6,4 @@ Use the versions in mise.toml. Build Wasm before SDK tests. Run `cargo test --lo
 
 Never place credentials, private endpoints, personal data, environment files or private dependencies in source, examples, tests, logs or reports. Use synthetic principals and session contexts. Keep security-sensitive reports private using SECURITY.md. Changes to authorization semantics, clock handling, persistence acknowledgements, identity separation or publication gates require regression coverage and an explanation of the trust boundary.
 
-Public GitHub Issues are for ordinary bugs and feature discussions. Do not include cached article content, tokens or private logs. Maintainers review contributions as capacity allows; there is no promised response or support SLA for this alpha.
+Public GitHub Issues are for ordinary bugs and feature discussions. Do not include cached article content, tokens or private logs. Maintainers review contributions as capacity allows; there is no promised response or support SLA for this beta.

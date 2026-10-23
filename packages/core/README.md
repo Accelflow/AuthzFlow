@@ -1,6 +1,6 @@
 # @authzflow/core
 
-MIT-licensed alpha authorization-state runtime maintained by Accelflow Inc. Ships prebuilt Rust/Wasm, ESM JavaScript, TypeScript declarations and a checked reader. npm consumers need no Rust compiler.
+MIT-licensed beta authorization-state runtime maintained by Accelflow Inc. Ships prebuilt Rust/Wasm, ESM JavaScript, TypeScript declarations and a checked reader. npm consumers need no Rust compiler.
 
 ```js
 import { createRuntime, createCheckedReader } from '@authzflow/core';
@@ -10,7 +10,7 @@ The host supplies verified sessions, clocks, an atomic durable checkpoint store,
 
 See https://github.com/Accelflow/AuthzFlow/blob/main/docs-public/getting-started.md for installation and the executable example, and https://github.com/Accelflow/AuthzFlow/blob/main/docs-public/adapters.md for the full callback contract. Node 22/24, ESM, TypeScript 5.9+ and modern secure-context WebAssembly browsers are initial targets.
 
-Offline permissions expire at their original bounded deadline and are lost across reader/process restarts. Server-side revocation cannot instantly reach disconnected clients. Already returned plaintext, raw store bypasses, multi-owner coordination and stream recovery are outside alpha guarantees.
+Offline permissions expire at their original bounded deadline and are lost across reader/process restarts. Server-side revocation cannot instantly reach disconnected clients. Already returned plaintext, raw store bypasses, multi-owner coordination and stream recovery are outside beta guarantees.
 
 LICENSE and THIRD_PARTY_NOTICES.md are included; the latter contains dependency and Rust standard-library attributions and license texts. Security reporting: https://github.com/Accelflow/AuthzFlow/security/advisories/new .
 
