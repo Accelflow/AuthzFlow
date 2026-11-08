@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-dist-tags:
-    if: github.repository == 'Accelflow/AuthzFlow' && github.ref == 'refs/tags/v0.1.0-beta.1-oidc-verification.2' && !inputs.publish
+    if: github.repository == 'Accelflow/AuthzFlow' && github.ref == 'refs/tags/v0.1.0-beta.1-oidc-verification.3' && !inputs.publish
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment: npm-release
@@ -54,6 +54,7 @@ jobs:
             assert.equal(data['dist-tags'].latest, '0.1.0-beta.1');
             assert.equal(data['dist-tags'].beta, '0.1.0-beta.1');
             assert.equal(data['dist-tags'].alpha, '0.1.0-alpha.8');
+            assert.equal(Object.hasOwn(data['dist-tags'], 'oidc-verification-' + process.env.GITHUB_RUN_ID), false);
             console.log('PASS exact existing artifact and tags:', name);
           }
           NODE
@@ -62,8 +63,14 @@ jobs:
         run: |
           set -euo pipefail
           result=0
-          npm dist-tag add @authzflow/core@0.1.0-beta.1 latest || result=1
-          npm dist-tag add @authzflow/server@0.1.0-beta.1 latest || result=1
+          tag="oidc-verification-$GITHUB_RUN_ID"
+          for package in @authzflow/core @authzflow/server; do
+            if npm dist-tag add "$package@0.1.0-beta.1" "$tag"; then
+              npm dist-tag rm "$package" "$tag" || result=1
+            else
+              result=1
+            fi
+          done
           exit "$result"
       - name: Read back latest and preserve alpha and beta
         shell: bash
@@ -71,5 +78,5 @@ jobs:
           set -euo pipefail
           for package in @authzflow/core @authzflow/server; do
             npm view "$package" dist-tags --json > "$RUNNER_TEMP/tags.json"
-            node --input-type=module -e 'import fs from "node:fs";import assert from "node:assert/strict";const tags=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+"/tags.json"));assert.equal(tags.latest,"0.1.0-beta.1");assert.equal(tags.beta,"0.1.0-beta.1");assert.equal(tags.alpha,"0.1.0-alpha.8");console.log("PASS OIDC latest update and tag readback",tags);'
+            node --input-type=module -e 'import fs from "node:fs";import assert from "node:assert/strict";const tags=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+"/tags.json"));assert.equal(tags.latest,"0.1.0-beta.1");assert.equal(tags.beta,"0.1.0-beta.1");assert.equal(tags.alpha,"0.1.0-alpha.8");assert.equal(Object.hasOwn(tags,"oidc-verification-"+process.env.GITHUB_RUN_ID),false);console.log("PASS actual OIDC tag write, cleanup and unchanged release tags",tags);'
           done
