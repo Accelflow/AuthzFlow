@@ -1,6 +1,6 @@
 {
   "name": "@authzflow/core",
-  "version": "0.1.0-alpha.8",
+  "version": "0.1.0-beta.1",
   "private": false,
   "type": "module",
   "author": "Accelflow Inc.",
@@ -36,6 +36,22 @@
     "./native-reader": {
       "types": "./dist/native-reader.d.ts",
       "import": "./dist/native-reader.js"
+    },
+    "./resource-group": {
+      "types": "./dist/resource-group.d.ts",
+      "import": "./dist/resource-group.js"
+    },
+    "./group-sqlite": {
+      "types": "./dist/group-sqlite.d.ts",
+      "import": "./dist/group-sqlite.js"
+    },
+    "./group-indexeddb": {
+      "types": "./dist/group-indexeddb.d.ts",
+      "import": "./dist/group-indexeddb.js"
+    },
+    "./group-notifications": {
+      "types": "./dist/group-notifications.d.ts",
+      "import": "./dist/group-notifications.js"
     }
   },
   "files": [

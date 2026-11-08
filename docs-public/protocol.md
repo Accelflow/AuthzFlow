@@ -1,4 +1,4 @@
-# Complete-check protocol, alpha 1
+# Complete-check protocol
 
 The product chooses its HTTP route and authentication. Use HTTPS with a fixed trusted authority in deployed applications. The caller sends only `requestId`, an ASCII alphanumeric, underscore or hyphen string of 1 to 128 characters. The checked reader creates a fresh cryptographic nonce for each check. Query parameters must not select identity, binding or offline policy.
 

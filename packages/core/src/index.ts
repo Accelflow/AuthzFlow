@@ -1,6 +1,9 @@
 export {createResourceAuthority,type ResourceAuthority,type ResourceAuthorityOptions,type ResourceReadInput,type ResourceReadLease,type ResourceIdentity,type ResourceAuthorityState,type ResourceAuthorityPhase,type ResourceAuthorityReason,type ResourceAuthorityEvent,type ResourceAuthorityEventCode,type ResourceAuthorityDiagnostic} from './resource-authority.js';
 import {createDrivenRuntime} from './runtime-driver.js';
 export {createChangeConsumer, type ChangeConsumer, type ChangeConsumerOptions} from './change-consumer.js';
+export {createResourceGroupCoordinator} from './resource-group.js';
+export type * from './resource-group-driver.js';
+export type {CachedItemResult} from './resource-authority-driver.js';
 import init, { WasmRuntime, runtime_abi_version } from '../wasm/authzflow_wasm.js';
 export { createCheckedReader, type CheckedRead, type CheckedReader, type CheckedReaderOptions } from './checked-reader.js';
 

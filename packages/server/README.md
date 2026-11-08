@@ -1,6 +1,6 @@
 # @authzflow/server
 
-MIT-licensed alpha complete-check provider maintained by Accelflow Inc. Ships ESM JavaScript and TypeScript declarations, with no runtime dependencies or Rust build required.
+MIT-licensed beta complete-check provider maintained by Accelflow Inc. Ships ESM JavaScript and TypeScript declarations, with no runtime dependencies or Rust build required.
 
 ```js
 import { createCheckProvider } from '@authzflow/server';
@@ -10,6 +10,13 @@ Connect existing authentication and authorization with the async `authenticate` 
 
 See https://github.com/Accelflow/AuthzFlow/blob/main/docs-public/adapters.md and https://github.com/Accelflow/AuthzFlow/blob/main/docs-public/protocol.md for callback and wire contracts. Node 22/24 and TypeScript 5.9+ are initial targets. Native Rust servers can use the companion authzflow-server source crate with the same wire fixtures.
 
-The checked reader in @authzflow/core validates these responses before returning content. Always keep authorization on ordinary product content APIs. Reliable event streams and cursor recovery are outside this complete-check alpha.
+The checked reader in @authzflow/core validates these responses before returning content. Always keep authorization on ordinary product content APIs. Reliable event streams and cursor recovery are outside this complete-check beta.
 
 LICENSE and THIRD_PARTY_NOTICES.md are included. Security reporting: https://github.com/Accelflow/AuthzFlow/security/advisories/new .
+
+`createResourceGroupFeed` is the opt-in metadata-only protocol v2 feed.
+`createResourceGroupCheck` attaches the server-selected Group watermark to an
+existing successful Resource check inside the host journal barrier. Products
+retain ACL decisions, transactional journal durability, cursor authentication,
+former-subscriber entitlement, and retention. The feed discloses only Group-wide
+revoke/revalidate events. It does not grant article access or replace existing v1.

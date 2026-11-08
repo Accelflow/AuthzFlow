@@ -1,8 +1,9 @@
 import type {Checkpoint,Options,Plan,Runtime,RuntimeEvent} from './index.js';
 import type {CheckedReader,CheckedReaderOptions} from './checked-reader.js';
 import {createDrivenResourceChangeTracker,type ResourceChangeTracker} from './resource-change-tracker-driver.js';
+import type {ResourceGroupCoordinator, GroupStamp, GroupAnchor} from './resource-group-driver.js';
 export interface ResourceIdentity {binding:string;resourceId:string;scopeId:string}
-export interface ResourceReadInput<T=unknown> extends ResourceIdentity {content:string;target?:T}
+export interface ResourceReadInput<T=unknown> extends ResourceIdentity {content:string;target?:T;resourceGroupId?:string}
 export type ResourceAuthorityPhase='idle'|'checking'|'allowed'|'revalidate'|'denied'|'expired'|'closed';
 export type ResourceAuthorityReason='initial'|'check_started'|'online_grant'|'offline_grant'|'revalidation_required'|'server_denied'|'deadline_elapsed'|'context_changed'|'clock_discontinuity'|'check_failed'|'purge_blocked'|'closed'|'evicted';
 /** Advisory snapshot; only a checked read/revalidation grants content access. */
@@ -12,6 +13,7 @@ export type ResourceAuthorityEventCode='authority_check_started'|'authority_reva
 export interface ResourceAuthorityEvent {readonly schemaVersion:1;readonly code:ResourceAuthorityEventCode;readonly level:'info'|'warn'|'error';readonly phase:ResourceAuthorityPhase;readonly reason?:ResourceAuthorityReason;readonly revision?:number;readonly droppedEvents?:number}
 export type ResourceAuthorityDiagnostic=RuntimeEvent|ResourceAuthorityEvent;
 export interface ResourceReadLease {allowed:true;validForMs:number;expiresAt:number}
+export type CachedItemResult={status:'allowed';lease:ResourceReadLease}|{status:'denied';reason:'access_denied'}|{status:'unavailable';reason:'permit_missing'|'expired'|'content_changed'|'check_in_progress'|'context_changed'|'revalidation_required'|'storage_failed'};
 type Response={status:number;json():Promise<unknown>};
 export interface ResourceAuthorityOptions<T=unknown> {
  session():Promise<{binding:string;context:string;expiresAtMs:number}>;
@@ -19,6 +21,8 @@ export interface ResourceAuthorityOptions<T=unknown> {
  storage:{load(kind:'reader'|'changes',resourceId:string):Promise<Checkpoint|null>;commit(kind:'reader'|'changes',resourceId:string,plan:Plan):Promise<string>};
  check(input:ResourceReadInput<T>,requestId:string):Promise<Response>;
  changes?:{snapshot(input:ResourceReadInput<T>,requestId:string):Promise<Response>;fetch(input:ResourceReadInput<T>,query:{requestId:string;cursor:string}):Promise<Response>};
+  /** Mutually exclusive with the legacy per-Resource feed. Own/close this coordinator at host scope. */
+  groups?:ResourceGroupCoordinator;
  /** Trusted host storage proof, never a renderer-provided flag. Does not grant or renew. */
  ownsContent?(input:ResourceReadInput<T>):Promise<boolean>;
  onGranted?(input:ResourceReadInput<T>):Promise<void>;
@@ -36,16 +40,17 @@ export interface ResourceAuthorityOptions<T=unknown> {
 export interface ResourceAuthority<T=unknown> {
  readWithPermit(input:ResourceReadInput<T>):Promise<ResourceReadLease>;
  readCachedWithPermit(input:ResourceReadInput<T>):Promise<ResourceReadLease>;
+  readCachedManyWithPermit(inputs:readonly ResourceReadInput<T>[]):Promise<CachedItemResult[]>;
  /** Drops the old in-memory permit; only a fresh online full check can succeed. */
  revalidate(input:ResourceReadInput<T>):Promise<ResourceReadLease>;
  getState(input:ResourceIdentity):ResourceAuthorityState;
  subscribe(input:ResourceIdentity,listener:(state:ResourceAuthorityState)=>void):()=>void;
  catchUp():Promise<void>;close():void;
 }
-type ReaderEntry<T>={input:ResourceReadInput<T>;version:number;reader?:CheckedReader<string>;ready?:Promise<CheckedReader<string>>;pending?:Promise<ResourceReadLease>;cached?:boolean;strict?:boolean;effects:Promise<void>;grantedContent?:string;readContent?:string;tracker?:ResourceChangeTracker;trackerReady?:Promise<ResourceChangeTracker>;createReader():Promise<CheckedReader<string>>};
+type ReaderEntry<T>={input:ResourceReadInput<T>;version:number;reader?:CheckedReader<string>;ready?:Promise<CheckedReader<string>>;pending?:Promise<ResourceReadLease>;cached?:boolean;strict?:boolean;effects:Promise<void>;grantedContent?:string;readContent?:string;tracker?:ResourceChangeTracker;trackerReady?:Promise<ResourceChangeTracker>;groupStamp?:GroupStamp;groupAnchor?:GroupAnchor;groupOff?:()=>void;createReader():Promise<CheckedReader<string>>};
 /** Bounded multi-resource coordination of Rust readers, durable cursors and host-owned replicas. */
 export function createDrivenResourceAuthority<T=unknown>(options:ResourceAuthorityOptions<T>):ResourceAuthority<T>{
- if(options.changes&&typeof options.onDenied!=='function'||(options.runtime===undefined)!==(options.reader===undefined))throw Error('authz_authority_config_invalid');
+ if(options.changes&&typeof options.onDenied!=='function'||options.changes&&options.groups||(options.runtime===undefined)!==(options.reader===undefined))throw Error('authz_authority_config_invalid');
  const clone=options.clone??structuredClone;
  const readers=new Map<string,ReaderEntry<T>>();let closed=false,polling:Promise<void>|undefined;
  type Observation={state:ResourceAuthorityState;listeners:Map<(state:ResourceAuthorityState)=>void,{busy:boolean;pending:boolean}>;clock?:ReturnType<typeof options.clock>;deadline?:number;timer?:ReturnType<typeof setTimeout>};
@@ -88,7 +93,7 @@ export function createDrivenResourceAuthority<T=unknown>(options:ResourceAuthori
  };
  const retire=(key:string,reason:'closed'|'evicted')=>{
   const record=observations.get(key);if(record){publish(record,'closed',reason);record.listeners.clear();}
-  const entry=readers.get(key);readers.delete(key);entry?.reader?.close();entry?.tracker?.close();
+  const entry=readers.get(key);readers.delete(key);entry?.reader?.close();entry?.tracker?.close();entry?.groupOff?.();
   if(reason==='evicted')observations.delete(key);
  };
  const observe=(input:ResourceIdentity)=>{
@@ -106,7 +111,11 @@ export function createDrivenResourceAuthority<T=unknown>(options:ResourceAuthori
    if(cached)throw Error('authz_cached_permit_missing');
    const owned:ReaderEntry<T>={input:clone(input),version:0,effects:Promise.resolve(),createReader(){const version=owned.version;return options.reader!({binding:input.binding,resourceId:resource,scopeId:input.scopeId,session:options.session,clock:options.clock,wasmBytes:options.wasmBytes,onEvent:runtimeEvent,
     storage:{load:()=>options.storage.load('reader',resource),commit:plan=>options.storage.commit('reader',resource,plan)},
-    check:async({requestId})=>{owned.readContent=undefined;try{return await options.check(owned.input,requestId);}catch(error:any){if((error instanceof TypeError||error?.name==='TimeoutError')&&owned.grantedContent&&owned.input.content!==owned.grantedContent&&await options.ownsContent?.(owned.input))owned.readContent=owned.grantedContent;throw error;}},read:async()=>owned.readContent??owned.input.content,contentHash:options.hash,
+    check:async({requestId})=>{owned.readContent=undefined;owned.groupAnchor=undefined;try{
+     const response=await options.check(owned.input,requestId);
+     if(options.groups&&response.status===200){const body=await response.json() as any;owned.groupAnchor=await options.groups.acceptCheck({...owned.input,resourceGroupId:owned.input.resourceGroupId!},body?.resourceGroup);return {status:response.status,json:async()=>body};}
+     return response;
+    }catch(error:any){if((error instanceof TypeError||error?.name==='TimeoutError')&&owned.grantedContent&&owned.input.content!==owned.grantedContent&&await options.ownsContent?.(owned.input))owned.readContent=owned.grantedContent;throw error;}},read:async()=>owned.readContent??owned.input.content,contentHash:options.hash,
    }).then(reader=>{if(closed||readers.get(key)!==owned||version!==owned.version){reader.close();throw Error('context_changed');}owned.reader=reader;return reader;});}};
    readers.set(key,owned);entry=owned;
    if(options.changes){owned.trackerReady=createDrivenResourceChangeTracker({binding:input.binding,resource,scopeId:input.scopeId,randomUUID:options.randomUUID,wasmBytes:options.wasmBytes,onEvent:runtimeEvent,runtime:options.runtime,session:options.session,clock:()=>{const {boot,now_ms}=options.clock();return {boot,now_ms};},wall:()=>options.clock().wall_ms,
@@ -125,12 +134,25 @@ export function createDrivenResourceAuthority<T=unknown>(options:ResourceAuthori
     purge:async ids=>{if(ids.some(id=>id!==resource))throw Error('authz_purge_target_invalid');try{if(ids.length)await deny(owned,record);return {status:'purged'};}catch(error:any){if(['authz_purge_dirty_target','authz_purge_blocked'].includes(error?.message)){return {status:'blocked'};}throw error;}},
    }).then(tracker=>{if(closed||readers.get(key)!==owned){tracker.close();throw Error('context_changed');}owned.tracker=tracker;return tracker;});void owned.trackerReady.catch(()=>{});}
   }
+  if(entry.input.resourceGroupId!==input.resourceGroupId)throw Error('group_membership_changed');
   if(entry.pending){if(cached)throw Error('check_in_progress');if(entry.input.content===input.content&&!entry.cached&&entry.strict===strict)return entry.pending;await entry.pending.catch(()=>{});return verify(input,cached,strict);}
   entry.input=clone(input);entry.cached=cached;entry.strict=strict;entry.readContent=undefined;
   const owned=entry;
   let turn=owned.version;
   const valid=()=>{if(closed||readers.get(key)!==owned||owned.version!==turn)throw Error('context_changed');};
   const run=Promise.resolve().then(async()=>{
+   if(options.groups){
+    if(!input.resourceGroupId)throw Error('group_identity_invalid');
+    const groupInput={...input,resourceGroupId:input.resourceGroupId};
+    if(!owned.groupOff)owned.groupOff=await options.groups.register(groupInput,action=>{
+     owned.version++;owned.reader?.close();owned.reader=undefined;owned.ready=undefined;owned.grantedContent=undefined;owned.groupStamp=undefined;
+     publish(record,action==='revoke'?'denied':'revalidate',action==='revoke'?'server_denied':'revalidation_required');
+     try{void Promise.resolve(options.onInvalidated?.(owned.input)).catch(()=>{});}catch{}
+    });
+    if(closed||readers.get(key)!==owned){owned.groupOff?.();owned.groupOff=undefined;throw Error('context_changed');}
+    if(owned.groupStamp){try{await options.groups.guard(groupInput,owned.groupStamp);}catch(error){owned.reader?.close();owned.reader=undefined;owned.ready=undefined;owned.grantedContent=undefined;owned.groupStamp=undefined;if(cached)throw error;}}
+    else if(cached)throw Error('authz_cached_permit_missing');
+   }
    if(strict){owned.version++;owned.reader?.close();owned.reader=undefined;owned.ready=undefined;owned.grantedContent=undefined;}
    turn=owned.version;
    if(!cached){publish(record,'checking','check_started');if(options.onEvent)emit({schemaVersion:1,code:strict?'authority_revalidation_started':'authority_check_started',level:'info',phase:'checking',revision:record.state.revision});}
@@ -140,6 +162,11 @@ export function createDrivenResourceAuthority<T=unknown>(options:ResourceAuthori
    valid();if(strict&&result.offline)throw Error('authz_online_check_required');
    if(closed||readers.get(key)!==owned)throw Error('context_changed');const delivered=options.clock();
    if(!cached&&!result.offline){await effect(owned,async()=>{valid();await options.onGranted?.(owned.input);valid();});owned.grantedContent=owned.input.content;}
+   if(options.groups){
+    const groupInput={...input,resourceGroupId:input.resourceGroupId!};
+    if(!cached&&!result.offline){if(!owned.groupAnchor)throw Error('group_revalidation_required');owned.groupStamp=await options.groups.granted(groupInput,owned.groupAnchor);}
+    if(!owned.groupStamp)throw Error('group_revalidation_required');await options.groups.guard(groupInput,owned.groupStamp);
+   }
    if(closed||readers.get(key)!==owned)throw Error('context_changed');const now=options.clock();
    const remaining=Math.min(result.validForMs-(now.now_ms-delivered.now_ms),result.expiresAtMs-now.wall_ms);
    if(![now.now_ms,now.wall_ms,delivered.now_ms,delivered.wall_ms].every(value=>Number.isSafeInteger(value)&&value>=0)||!now.boot||now.boot!==delivered.boot||now.now_ms<delivered.now_ms||now.wall_ms<delivered.wall_ms||remaining<1)throw Error('authz_offline_expired');
@@ -159,9 +186,52 @@ export function createDrivenResourceAuthority<T=unknown>(options:ResourceAuthori
 
  };
  const api:ResourceAuthority<T>={readWithPermit:input=>verify(input),readCachedWithPermit:input=>verify(input,true),revalidate:input=>verify(input,false,true),
+ async readCachedManyWithPermit(inputs){
+  if(!Array.isArray(inputs)||inputs.length>64)throw Error('authz_batch_invalid');
+  let bytes=0;const snapshot=clone(inputs);
+  for(const input of snapshot){keyOf(input);if(typeof input.content!=='string'||!input.content.length||input.content.length>1048576)throw Error('authz_batch_invalid');let itemBytes=0;
+   // UTF-8 byte length without browser-only globals (native/Hermes uses this same path).
+   for(const point of input.content){const code=point.codePointAt(0)!;itemBytes+=code<=0x7f?1:code<=0x7ff?2:code<=0xffff?3:4;}bytes+=itemBytes;
+   if(itemBytes>1048576)throw Error('authz_batch_invalid');
+   if(bytes>4194304)throw Error('authz_batch_invalid');
+  }
+  const started=options.clock(),actor=clone(await options.session()),results:CachedItemResult[]=new Array(snapshot.length),deadlines:number[]=new Array(snapshot.length),fences:{entry:ReaderEntry<T>|undefined;version:number|undefined}[]=new Array(snapshot.length);
+  const classify=(error:any,input:ResourceReadInput<T>):CachedItemResult=>{
+   const message=error?.message;
+   const state=observations.get(keyOf(input))?.state;
+   if(message==='authz_check_denied'||state?.phase==='denied'&&state.reason==='server_denied')return {status:'denied',reason:'access_denied'};
+   return {status:'unavailable',reason:message==='authz_cached_permit_missing'?'permit_missing':message==='authz_offline_expired'?'expired':message==='authz_content_changed'?'content_changed':message==='check_in_progress'?'check_in_progress':message==='context_changed'||message==='clock_discontinuity'?'context_changed':message?.startsWith('group_')||message==='runtime_unavailable'?'revalidation_required':'storage_failed'};
+  };
+  // Keep duplicates in one lane; each Resource's own reader serializes access.
+  const lanes=new Map<string,number[]>();snapshot.forEach((input,index)=>{const key=keyOf(input);const lane=lanes.get(key)??[];lane.push(index);lanes.set(key,lane);});
+  const jobs=[...lanes.values()];let at=0;
+  await Promise.all(Array.from({length:Math.min(8,jobs.length)},async()=>{while(at<jobs.length){const indices=jobs[at++]!;for(const index of indices){try{const lease=await verify(snapshot[index]!,true);results[index]={status:'allowed',lease};deadlines[index]=options.clock().now_ms+lease.validForMs;}catch(error){results[index]=classify(error,snapshot[index]!);}}}}));
+  for(let index=0;index<snapshot.length;index++)if(results[index]?.status==='allowed'){
+   try{const lease=await verify(snapshot[index]!,true);results[index]={status:'allowed',lease};deadlines[index]=Math.min(deadlines[index]!,options.clock().now_ms+lease.validForMs);const entry=readers.get(keyOf(snapshot[index]!));fences[index]={entry,version:entry?.version};}catch(error){results[index]=classify(error,snapshot[index]!);}
+  }
+  if(options.groups){
+   const protectedItems=snapshot.map((input,index)=>({input,index,entry:readers.get(keyOf(input))})).filter(value=>results[value.index]?.status==='allowed');
+   try{const decisions=await options.groups.guardMany(protectedItems.map(({input,entry})=>({input:{...input,resourceGroupId:input.resourceGroupId!},stamp:entry?.groupStamp!})));protectedItems.forEach((item,i)=>{if(!decisions[i])results[item.index]={status:'unavailable',reason:'revalidation_required'};});}
+   catch{for(const item of protectedItems)results[item.index]={status:'unavailable',reason:'storage_failed'};}
+  }
+  const current=await options.session(),now=options.clock();
+  const changed=closed||current.binding!==actor.binding||current.context!==actor.context||!actor.context||!Number.isSafeInteger(current.expiresAtMs)||!Number.isSafeInteger(actor.expiresAtMs)||now.wall_ms>=Math.min(current.expiresAtMs,actor.expiresAtMs)||now.boot!==started.boot||now.now_ms<started.now_ms||now.wall_ms<started.wall_ms;
+  if(changed)return results.map(()=>({status:'unavailable',reason:'context_changed'}));
+  const storageFailed=results.some(result=>result.status==='unavailable'&&result.reason==='storage_failed');
+  for(let i=0;i<results.length;i++){
+   const result=results[i];if(result?.status!=='allowed')continue;
+   if(storageFailed){results[i]={status:'unavailable',reason:'storage_failed'};continue;}
+   const entry=readers.get(keyOf(snapshot[i]!)),fence=fences[i];
+   if(!entry||entry!==fence?.entry||entry.version!==fence.version){results[i]={status:'unavailable',reason:'revalidation_required'};continue;}
+   const remaining=Math.floor(Math.min(deadlines[i]!-now.now_ms,result.lease.expiresAt-now.wall_ms,current.expiresAtMs-now.wall_ms));
+   results[i]=remaining>0?{status:'allowed',lease:{allowed:true,validForMs:remaining,expiresAt:Math.min(result.lease.expiresAt,now.wall_ms+remaining)}}:{status:'unavailable',reason:'expired'};
+  }
+  return results;
+ },
  getState(input){const key=keyOf(input),record=observations.get(key);return record?sample(record):initial(closed?'closed':'idle',closed?'closed':'initial');},
  subscribe(input,listener){if(typeof listener!=='function')throw Error('authz_observer_invalid');if(closed){notify({state:api.getState(input),listeners:new Map([[listener,{busy:false,pending:false}]])},listener);return ()=>{};}const subscriber=(state:ResourceAuthorityState)=>listener(state);const record=observe(input);if(record.listeners.size>=64)throw Error('authz_observer_limit');sample(record);record.listeners.set(subscriber,{busy:false,pending:false});notify(record,subscriber);clearTimeout(record.timer);schedule(record);return ()=>{record.listeners.delete(subscriber);if(!record.listeners.size){clearTimeout(record.timer);record.timer=undefined;}};},
  async catchUp(){
+  if(options.groups)return options.groups.catchUp();
   if(polling)return polling;const task=(async()=>{let failure:unknown;const entries=[...readers.values()].filter(entry=>entry.trackerReady);for(let index=0;index<entries.length;index+=8){const results=await Promise.allSettled(entries.slice(index,index+8).map(async entry=>(await entry.trackerReady!).catchUp()));for(const result of results)if(result.status==='rejected')failure??=result.reason;}if(failure)throw failure;})();
   polling=task;try{return await task;}catch(error){if(options.onEvent)emit({schemaVersion:1,code:'authority_catch_up_failed',level:'warn',phase:'revalidate',reason:'check_failed'});throw error;}finally{if(polling===task)polling=undefined;}
  },close(){if(closed)return;closed=true;clearInterval(timer);for(const key of observations.keys())retire(key,'closed');if(options.onEvent)emit({schemaVersion:1,code:'authority_closed',level:'info',phase:'closed',reason:'closed'});}};

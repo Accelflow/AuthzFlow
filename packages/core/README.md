@@ -1,6 +1,6 @@
 # @authzflow/core
 
-MIT-licensed alpha authorization-state runtime maintained by Accelflow Inc. Ships prebuilt Rust/Wasm, ESM JavaScript, TypeScript declarations and a checked reader. npm consumers need no Rust compiler.
+MIT-licensed beta authorization-state runtime maintained by Accelflow Inc. Ships prebuilt Rust/Wasm, ESM JavaScript, TypeScript declarations and a checked reader. npm consumers need no Rust compiler.
 
 ```js
 import { createRuntime, createCheckedReader } from '@authzflow/core';
@@ -10,7 +10,7 @@ The host supplies verified sessions, clocks, an atomic durable checkpoint store,
 
 See https://github.com/Accelflow/AuthzFlow/blob/main/docs-public/getting-started.md for installation and the executable example, and https://github.com/Accelflow/AuthzFlow/blob/main/docs-public/adapters.md for the full callback contract. Node 22/24, ESM, TypeScript 5.9+ and modern secure-context WebAssembly browsers are initial targets.
 
-Offline permissions expire at their original bounded deadline and are lost across reader/process restarts. Server-side revocation cannot instantly reach disconnected clients. Already returned plaintext, raw store bypasses, multi-owner coordination and stream recovery are outside alpha guarantees.
+Offline permissions expire at their original bounded deadline and are lost across reader/process restarts. Server-side revocation cannot instantly reach disconnected clients. Already returned plaintext, raw store bypasses, multi-owner coordination and stream recovery are outside beta guarantees.
 
 LICENSE and THIRD_PARTY_NOTICES.md are included; the latter contains dependency and Rust standard-library attributions and license texts. Security reporting: https://github.com/Accelflow/AuthzFlow/security/advisories/new .
 
@@ -35,3 +35,27 @@ do not supply that grant. A different cached value is rejected without destroyin
 the valid grant for the original content. Session/clock/revision failures fence it.
 Hosts can use this for secondary cache projections; normal screen revalidation
 continues to call `readWithPermit()`. It cannot turn a cached checkpoint into permission.
+
+### Optional Resource Group integration
+
+The opt-in `resource-group` entrypoint aggregates invalidations for related
+Resources. `createResourceGroupCoordinator` uses Rust protocol v2;
+`createNativeResourceGroupCoordinator` in `native-reader` uses the same Rust
+transitions. Attach it through the Resource authority's `groups` option and pass
+`resourceGroupId` on each Resource input. Do not enable the legacy `changes`
+option on that same authority.
+
+`group-sqlite`, `group-indexeddb`, and `group-notifications` provide shared-store
+and wakeup adapters. The host must retain session checks and atomic, term-fenced
+purge. Group registration, shared state and notifications never grant content;
+each reader retains its own fresh-check permit. Cold start cannot inherit another
+tab's permit. Close the authority before closing its host-owned coordinator.
+
+`readCachedManyWithPermit` checks up to 64 cached Resource inputs (4 MiB aggregate)
+without HTTP checks or deadline renewal. It returns ordered per-item results and
+rechecks shared fences before delivery. It does not load missing permits or make
+an entire search index readable offline.
+
+Versioned source contracts live under `contracts/`. Browser-tab and independent
+SQLite-process contracts are tested; each product still needs its own integration
+acceptance and revision-fenced purge implementation.

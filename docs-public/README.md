@@ -1,8 +1,11 @@
 # AuthzFlow
 
+Versioned integration contracts are indexed in [contracts](contracts/README.md).
+Resource Group v2 is opt-in; complete-check v1 remains separate.
+
 AuthzFlow is developed and maintained by [Accelflow Inc.](https://accelflow.jp/) and licensed under MIT.
 
-This alpha provides authorization-state checks for application-managed cached reads. The server remains the authorization authority. A Rust/Wasm runtime fences reads until a verified checkpoint is durably committed, and a TypeScript checked reader connects complete checks, identity, content integrity and bounded offline access.
+This beta provides authorization-state checks for application-managed cached reads. The server remains the authorization authority. A Rust/Wasm runtime fences reads until a verified checkpoint is durably committed, and a TypeScript checked reader connects complete checks, identity, content integrity and bounded offline access.
 
 - `@authzflow/core`: prebuilt Wasm, TypeScript SDK and checked reader.
 - `@authzflow/server`: Node complete-check provider; no Rust build required on installation.
@@ -26,10 +29,12 @@ mise exec -- pnpm example
 
 The example verifies complete checks, one minute of bounded offline access, exact expiry, and persistent denial using synthetic sessions and in-memory storage. It does not implement a production identity provider or database.
 
-## Alpha scope
+## Beta scope
 
-Node 22 and 24, ESM, TypeScript 5.9+, and modern browsers with secure contexts and WebAssembly are the initial targets. Rust builds use the pinned toolchain in `mise.toml`. Native Rust APIs can use a pinned public Git revision; crates.io distribution is not part of this first alpha.
+Integration acceptance includes a desktop application in an isolated single-user, single-resource test profile: online checks, bounded offline access, expiry, reconnection and revocation cleanup. This does not establish production-wide or long-duration validation.
 
-Only authenticated complete checks are connected by the checked reader. Change-stream recovery, durable server cursors, offline cold start and multi-owner coordination are outside this alpha contract. The core batch API is lower-level and requires a host protocol that supplies ordering and recovery.
+Node 22 and 24, ESM, TypeScript 5.9+, and modern browsers with secure contexts and WebAssembly are the initial targets. Rust builds use the pinned toolchain in `mise.toml`. Native Rust APIs can use a pinned public Git revision; crates.io distribution is not part of this beta release.
+
+Authenticated complete checks remain the source of each Resource permit. Optional Resource Group v2 adds aggregated invalidation, cached batch checks and shared-store coordination. Real browser two-tab and independent SQLite process tests cover owner takeover and denial; this does not establish distributed-device coordination or production-wide acceptance. Hosts must supply authenticated cursors, journal barriers and transactional purge. Offline cold start remains unsupported. See [versioned contracts](contracts/README.md) for the separate Group and cached-batch guarantees.
 
 Offline revocation may take until the original permit expires. The runtime cannot recall plaintext already returned or guard code that bypasses it. See [security](SECURITY.md), [compatibility and release policy](docs-public/releasing.md), [contributing](CONTRIBUTING.md), and [third-party notices](THIRD_PARTY_NOTICES.md).

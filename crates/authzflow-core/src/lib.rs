@@ -1,4 +1,6 @@
 mod decision;
+mod group;
+pub use group::dispatch_group;
 mod model;
 pub use decision::evaluate;
 pub use model::*;

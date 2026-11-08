@@ -12,6 +12,8 @@ try {
     const path = new URL(route.request().url()).pathname;
     if(path==='/') return route.fulfill({contentType:'text/html',body:'<!doctype html><title>AuthzFlow conformance</title><output id="result">Running</output>'});
     const files={
+      '/dist/resource-group.js':'packages/core/dist/resource-group.js',
+      '/dist/resource-group-driver.js':'packages/core/dist/resource-group-driver.js',
       '/dist/resource-authority-driver.js':'packages/core/dist/resource-authority-driver.js',
       '/dist/resource-change-tracker-driver.js':'packages/core/dist/resource-change-tracker-driver.js',
       '/dist/resource-authority.js':'packages/core/dist/resource-authority.js',

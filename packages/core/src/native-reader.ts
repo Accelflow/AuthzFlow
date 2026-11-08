@@ -35,3 +35,13 @@ import {createDrivenResourceAuthority,type ResourceAuthorityOptions} from './res
 export function createNativeResourceAuthority<T=unknown>(options:Omit<ResourceAuthorityOptions<T>,'wasmBytes'> & {native:NativePort;randomUUID():string}){
  return createDrivenResourceAuthority({...options,clone:options.clone??(value=>JSON.parse(JSON.stringify(value))),runtime:options.runtime??(settings=>createNativeRuntime({...settings,native:options.native})),reader:options.reader??(settings=>createNativeCheckedReader({...settings,native:options.native,randomUUID:options.randomUUID}))});
 }
+
+import {createDrivenResourceGroup, type ResourceGroupOptions} from './resource-group-driver.js';
+/** Requires native Group protocol support; no Wasm import or JavaScript fallback. */
+export function createNativeResourceGroupCoordinator(options:ResourceGroupOptions & {native:NativePort}) {
+ return createDrivenResourceGroup(options,request=>{
+  const response=JSON.parse(options.native.call(JSON.stringify({op:'group',request})));
+  if(response?.ok!==true)throw Error(typeof response?.error==='string'?response.error:'native_response_invalid');
+  return response.value;
+ });
+}

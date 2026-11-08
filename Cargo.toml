@@ -3,7 +3,7 @@ members = ["crates/authzflow-core", "crates/authzflow-wasm", "crates/authzflow-s
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0-alpha.1"
+version = "0.1.0-beta.1"
 edition = "2024"
 license = "MIT"
 authors = ["Accelflow Inc."]
