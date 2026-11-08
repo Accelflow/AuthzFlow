@@ -1,0 +1,6 @@
+{
+  "identity": {"binding":"actor-a","resourceGroupId":"group-a"},
+  "position": {"epoch":"epoch-a","sequence":"0","cursor":"cursor-0"},
+  "batch": {"binding":"actor-a","resourceGroupId":"group-a","epoch":"epoch-a","fromSequence":"0","throughSequence":"2","nextCursor":"cursor-2","changes":[{"sequence":"1","action":"revoke"},{"sequence":"2","action":"revalidate"}]},
+  "resources": ["article-a","article-b"]
+}

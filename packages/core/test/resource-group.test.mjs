@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {createResourceGroupCoordinator} from '../dist/resource-group.js';
+import {createNativeResourceGroupCoordinator} from '../dist/native-reader.js';
+import {registerGroupContract} from './resource-group-contract.mjs';
+const wasmBytes=new Uint8Array(readFileSync(new URL('../wasm/authzflow_wasm_bg.wasm',import.meta.url)));
+registerGroupContract('Wasm Group',o=>createResourceGroupCoordinator({...o,wasmBytes}));
+const binary=fileURLToPath(new URL('../../../target/debug/authzflow-native-json',import.meta.url));
+registerGroupContract('Native Group',o=>createNativeResourceGroupCoordinator({...o,native:{call(input){const r=spawnSync(binary,[],{input:input+'\n',encoding:'utf8'});if(r.status!==0)throw Error('native_failed');return r.stdout.trim();}}}));

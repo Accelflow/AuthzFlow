@@ -28,6 +28,12 @@ impl Bridge {
     }
     fn request(&mut self, v: Value) -> Result<Value, String> {
         let op = v["op"].as_str().ok_or("invalid_request")?;
+        if op == "group" {
+            return serde_json::from_str(&authzflow_core::dispatch_group(
+                &v["request"].to_string(),
+            )?)
+            .map_err(|_| "invalid_response".into());
+        }
         if op == "version" {
             return Ok(json!(2));
         }

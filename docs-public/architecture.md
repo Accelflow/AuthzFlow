@@ -18,4 +18,4 @@ The host provides the verified session context, monotonic and wall clocks, atomi
 
 The runtime keeps decisions in Wasm-owned state. Reads avoid serializing the complete checkpoint. Expiry pruning runs in bounded batches. Optional diagnostic events are off by default and contain fixed codes and numeric measurements rather than content, IDs or tokens.
 
-This alpha permits one owner per checkpoint store and one in-flight checked read per reader. The checked reader returns `check_in_progress` for overlaps. Cross-process coordination is the host's responsibility. A failed commit or discontinuous clock fails closed.
+This beta permits one owner per checkpoint store and one in-flight checked read per reader. The checked reader returns `check_in_progress` for overlaps. Cross-process coordination is the host's responsibility. A failed commit or discontinuous clock fails closed.

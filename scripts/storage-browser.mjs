@@ -7,7 +7,7 @@ try{
  await page.route('https://authzflow.test/**',async route=>{
   const p=new URL(route.request().url()).pathname;
   if(p==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><title>AuthzFlow storage acceptance</title>'});
-  const files=['dist/resource-authority-driver.js','dist/resource-change-tracker-driver.js','dist/resource-authority.js','dist/resource-change-tracker.js','dist/runtime-driver.js','dist/index.js','dist/checked-reader-protocol.js','dist/checked-reader.js','dist/change-consumer.js','dist/cache.js','dist/indexeddb.js','wasm/authzflow_wasm.js','wasm/authzflow_wasm_bg.wasm'];
+  const files=['dist/resource-group.js','dist/resource-group-driver.js','dist/resource-authority-driver.js','dist/resource-change-tracker-driver.js','dist/resource-authority.js','dist/resource-change-tracker.js','dist/runtime-driver.js','dist/index.js','dist/checked-reader-protocol.js','dist/checked-reader.js','dist/change-consumer.js','dist/cache.js','dist/indexeddb.js','wasm/authzflow_wasm.js','wasm/authzflow_wasm_bg.wasm'];
   if(!files.includes(p.slice(1)))return route.fulfill({status:404,body:'missing'});
   return route.fulfill({contentType:p.endsWith('.wasm')?'application/wasm':'text/javascript',body:readFileSync('packages/core'+p)});
  });

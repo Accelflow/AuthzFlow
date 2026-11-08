@@ -1,6 +1,17 @@
 # Changelog
 
-## 0.1.0-alpha.8 (unpublished)
+## 0.1.0-beta.1
+
+- Add opt-in Resource Group v2 invalidation delivery with Rust-validated ordering, durable fences and retryable purge intents.
+- Add cached Resource batch checks without network renewal or deadline extension.
+- Add SQLite/IndexedDB coordination ports for shared invalidation and owner takeover across tabs or processes; each Resource still requires its own checked permit.
+- Add a server Group feed and a complete-check watermark adapter, plus versioned consumer contracts.
+- Extend real Wasm/native, multi-process SQLite and two-tab browser acceptance; retain existing browser storage and revocation regressions.
+- Align npm and Rust workspace versions and publish paired packages under the beta dist-tag.
+- Preserve original offline deadlines, dirty-data protection and host-owned authentication, ACL, transaction and purge boundaries.
+- Include consolidated Markdown third-party notices in both npm packages; no HTML notices.
+
+## 0.1.0-alpha.8
 
 - Add immutable, bounded resource state snapshots and subscriptions with expiry and failure reasons.
 - Add strict `revalidate()` for change catch-up plus a fresh online permit; existing read APIs remain compatible.
@@ -9,7 +20,7 @@
 - Expand the shared Wasm/native contract for ACK/disconnect, delayed responses, expiry, session switches, observers and durable revoke races.
 - Keep pending checks active through asynchronous denial cleanup, preventing strict retries from starving host storage on an already-rejected inner promise.
 - Add a native-only coordinator entry with no Wasm loader/import.meta dependency for Hermes.
-- Align the server candidate version; no server behavior change, npm publication or public synchronization.
+- Align the server version; no server behavior change. Published as paired npm packages with provenance.
 
 ## 0.1.0-alpha.7 (unpublished)
 

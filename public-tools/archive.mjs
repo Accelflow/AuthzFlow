@@ -6,6 +6,11 @@ export const archiveFiles = {
   '@authzflow/core': ['dist/resource-authority-driver.js','dist/resource-authority-driver.d.ts','dist/resource-change-tracker-driver.js','dist/resource-change-tracker-driver.d.ts','dist/resource-authority.js','dist/resource-authority.d.ts','dist/resource-change-tracker.js','dist/resource-change-tracker.d.ts','testing/index.mjs','testing/index.d.mts','testing/resource-authority-conformance.mjs','testing/resource-authority-conformance.d.mts','testing/content-hash-conformance.mjs','testing/content-hash-conformance.d.mts','dist/checked-reader-protocol.js','dist/checked-reader-protocol.d.ts','dist/native-reader.js','dist/native-reader.d.ts','dist/runtime-driver.js','dist/runtime-driver.d.ts','dist/replica-eligibility.js','dist/replica-eligibility.d.ts','dist/replicas.js','dist/replicas.d.ts','dist/content-hash.js','dist/content-hash.d.ts','testing/replica-conformance.mjs','testing/replica-conformance.d.mts','dist/cache.js', 'dist/cache.d.ts', 'dist/sqlite.js', 'dist/sqlite.d.ts', 'dist/indexeddb.js', 'dist/indexeddb.d.ts', 'dist/index.js', 'dist/index.d.ts', 'dist/checked-reader.js', 'dist/checked-reader.d.ts', 'dist/change-consumer.js', 'dist/change-consumer.d.ts', 'wasm/authzflow_wasm.js', 'wasm/authzflow_wasm.d.ts', 'wasm/authzflow_wasm_bg.wasm', 'wasm/authzflow_wasm_bg.wasm.d.ts', 'package.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.md'].sort(),
   '@authzflow/server': ['dist/index.js', 'dist/index.d.ts', 'dist/change-feed.js', 'dist/change-feed.d.ts', 'package.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.md'].sort(),
 };
+for (const name of ['resource-group','resource-group-driver','group-sqlite','group-indexeddb','group-notifications']) {
+  archiveFiles['@authzflow/core'].push(`dist/${name}.js`,`dist/${name}.d.ts`);
+}
+archiveFiles['@authzflow/server'].push('dist/resource-group-feed.js','dist/resource-group-feed.d.ts');
+for (const files of Object.values(archiveFiles)) files.sort();
 
 export async function verifyReleaseArchive(archive) {
   let tar;
@@ -33,7 +38,7 @@ export async function verifyReleaseArchive(archive) {
   const source = JSON.parse(await readFile(new URL(`../packages/${manifest.name.endsWith('/core') ? 'core' : 'server'}/package.json`, import.meta.url), 'utf8'));
   if (JSON.stringify(manifest) !== JSON.stringify(source) || manifest.private !== false || manifest.license !== 'MIT'
     || manifest.author !== 'Accelflow Inc.' || manifest.publishConfig?.access !== 'public' || manifest.publishConfig?.provenance !== true
-    || manifest.publishConfig?.registry !== 'https://registry.npmjs.org/' || !/^\d+\.\d+\.\d+-alpha\.\d+$/.test(manifest.version)
+    || manifest.publishConfig?.registry !== 'https://registry.npmjs.org/' || !/^\d+\.\d+\.\d+-(?:alpha|beta)\.\d+$/.test(manifest.version)
     || manifest.scripts && Object.keys(manifest.scripts).length) throw Error('npm_publication_not_ready');
   for (const group of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies']) if (manifest[group] && Object.keys(manifest[group]).length) throw Error('npm_dependency_unreviewed');
   for (const file of ['LICENSE', 'THIRD_PARTY_NOTICES.md']) {

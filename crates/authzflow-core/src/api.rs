@@ -4,6 +4,9 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 enum Request {
+    Group {
+        request: serde_json::Value,
+    },
     EvaluateMany {
         state: Checkpoint,
         resources: Vec<String>,
@@ -41,6 +44,7 @@ pub fn dispatch(input: &str) -> Result<String, String> {
     }
     let request: Request = serde_json::from_str(input).map_err(|_| "invalid_request")?;
     match request {
+        Request::Group { request } => crate::dispatch_group(&request.to_string()),
         Request::EvaluateMany {
             state,
             resources,
